@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en" class="auth-pending">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bridge Register</title>
+<meta name="description" content="Register, inspect and verify bridges and culverts on the national road network - in the field, even without signal.">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<style>
+  :root {
+    --navy: #0b2a5c; --navy-2: #1a4fb0; --amber: #1e9e3e; --green-d: #157a2f; --green-l: #6fdc88; --ink: #1c2733; --muted: #5a6878;
+    --line: #e3e8ee; --bg: #ffffff; --soft: #f5f7fa;
+    --good: #2e8b57; --fair: #e0a100; --poor: #c8412b;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; font-family: "Source Sans 3", "Segoe UI", system-ui, sans-serif; color: var(--ink); background: var(--bg); line-height: 1.55; }
+  a { color: inherit; }
+  .wrap { max-width: 1160px; margin: 0 auto; padding: 0 24px; }
+
+  /* nav */
+  .gov-strip { background: var(--amber); color: #e6f6ea; font-size: 13px; }
+  .gov-strip .wrap { display: flex; justify-content: space-between; padding-top: 6px; padding-bottom: 6px; gap: 12px; flex-wrap: wrap; }
+  .gov-strip b { color: #fff; font-weight: 600; }
+  nav { border-bottom: 1px solid var(--line); background: #fff; position: sticky; top: 0; z-index: 10; }
+  nav .wrap { display: flex; align-items: center; gap: 28px; height: 76px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 19px; text-decoration: none; color: var(--navy); }
+  .brand .logo { height: 56px; width: auto; display: block; }
+  .brand-text { display: flex; flex-direction: column; line-height: 1.1; padding-left: 12px; border-left: 2px solid var(--line); }
+  .brand-text small { font-size: 12px; font-weight: 600; color: var(--amber); letter-spacing: .02em; margin-top: 3px; }
+  .motto { font-style: italic; color: #fff; font-weight: 600; }
+  .links { display: flex; gap: 24px; margin-left: auto; font-weight: 600; font-size: 15px; }
+  .links a { text-decoration: none; color: var(--muted); } .links a:hover { color: var(--navy); }
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border-radius: 6px; font-weight: 700; text-decoration: none; font-size: 16px; border: 2px solid transparent; }
+  .btn-primary { background: var(--amber); color: #fff; } .btn-primary:hover { background: var(--green-d); }
+  .btn-ghost { border-color: #fff3; color: #fff; } .btn-ghost:hover { border-color: #fff; }
+  .btn-nav { background: var(--navy); color: #fff; padding: 9px 18px; }
+  .auth-pending body { visibility: hidden; }
+  .user { display: flex; align-items: center; gap: 14px; }
+  .who { display: flex; flex-direction: column; line-height: 1.15; text-align: right; font-size: 15px; color: var(--navy); }
+  .who small { font-size: 12px; color: var(--muted); font-weight: 600; }
+  .btn-out { background: #fff; color: var(--navy); border: 2px solid var(--line); padding: 8px 16px; font-size: 15px; cursor: pointer; font-family: inherit; }
+  .btn-out:hover { border-color: var(--navy); }
+  @media (max-width: 560px) { .who small { display: none; } .who { font-size: 13px; } }
+
+  /* hero */
+  .hero { background: linear-gradient(135deg, var(--navy) 0%, var(--navy-2) 100%); color: #fff; overflow: hidden; }
+  .hero .wrap { display: grid; grid-template-columns: 1.05fr 1fr; gap: 48px; align-items: center; padding-top: 72px; padding-bottom: 72px; }
+  .eyebrow { display: inline-block; font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--green-l); margin-bottom: 14px; }
+  h1 { font-size: clamp(36px, 5vw, 56px); line-height: 1.05; margin: 0 0 18px; font-weight: 800; letter-spacing: -.01em; }
+  .lead { font-size: 19px; color: #c9d6e6; max-width: 540px; margin: 0 0 30px; }
+  .cta { display: flex; gap: 12px; flex-wrap: wrap; }
+  .hero-art { position: relative; }
+  .hero-art svg { width: 100%; height: auto; display: block; }
+  .hero-card { position: absolute; right: 0; bottom: -8px; background: #fff; color: var(--ink); border-radius: 10px; padding: 12px 16px; box-shadow: 0 12px 30px #0006; font-size: 14px; display: flex; gap: 10px; align-items: center; }
+  .hero-card .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--good); box-shadow: 0 0 0 4px #2e8b5733; }
+
+  /* stats */
+  .stats { background: #fff; border-bottom: 1px solid var(--line); }
+  .stats .wrap { display: grid; grid-template-columns: repeat(5, 1fr); }
+  .stat { padding: 28px 20px; border-left: 1px solid var(--line); }
+  .stat:first-child { border-left: 0; }
+  .stat .num { font-size: 34px; font-weight: 800; color: var(--navy); line-height: 1.1; }
+  .stat .lbl { color: var(--muted); font-size: 14px; font-weight: 600; }
+
+  section { padding: 84px 0; }
+  .section-head { max-width: 640px; margin-bottom: 44px; }
+  .section-head h2 { font-size: 36px; line-height: 1.15; margin: 0 0 12px; color: var(--navy); }
+  .section-head p { color: var(--muted); font-size: 18px; margin: 0; }
+
+  /* condition */
+  .condition { background: var(--soft); }
+  .cond-grid { display: grid; grid-template-columns: 1fr 1.3fr; gap: 48px; align-items: center; }
+  .bar { display: flex; height: 22px; border-radius: 4px; overflow: hidden; background: var(--line); gap: 2px; }
+  .bar span { display: block; transition: flex-grow .8s ease; }
+  .legend { display: flex; gap: 24px; margin-top: 16px; flex-wrap: wrap; }
+  .legend div { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+  .legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+  .legend small { color: var(--muted); font-weight: 400; font-size: 15px; }
+  .meter { margin-top: 32px; }
+  .meter .top { display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 8px; }
+
+  /* features */
+  .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .feature { border: 1px solid var(--line); border-radius: 10px; padding: 26px; background: #fff; }
+  .feature .ico { width: 44px; height: 44px; border-radius: 8px; background: #e3f4e7; display: grid; place-items: center; margin-bottom: 16px; }
+  .feature .ico svg { width: 24px; height: 24px; stroke: var(--navy); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .feature h3 { margin: 0 0 6px; font-size: 19px; color: var(--navy); }
+  .feature p { margin: 0; color: var(--muted); }
+
+  /* steps */
+  .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; counter-reset: s; }
+  .step { position: relative; padding: 0 24px 0 0; }
+  .step::before { counter-increment: s; content: counter(s); display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--navy); color: #fff; font-weight: 800; font-size: 18px; margin-bottom: 18px; position: relative; z-index: 1; }
+  .step::after { content: ""; position: absolute; top: 22px; left: 44px; right: 0; height: 2px; background: repeating-linear-gradient(90deg, var(--amber) 0 10px, transparent 10px 18px); }
+  .step:last-child::after { display: none; }
+  .step h3 { margin: 0 0 6px; color: var(--navy); }
+  .step p { margin: 0; color: var(--muted); }
+
+  .cta-band { background: var(--navy); color: #fff; }
+  .cta-band .wrap { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; padding-top: 56px; padding-bottom: 56px; }
+  .cta-band h2 { margin: 0 0 6px; font-size: 30px; }
+  .cta-band p { margin: 0; color: #c9d6e6; }
+
+  footer { background: #071d42; color: #9fb0c4; font-size: 14px; }
+  footer .wrap { display: flex; justify-content: space-between; gap: 16px; padding-top: 24px; padding-bottom: 24px; flex-wrap: wrap; }
+
+  @media (max-width: 900px) {
+    .hero .wrap, .cond-grid { grid-template-columns: 1fr; }
+    .stats .wrap { grid-template-columns: repeat(2, 1fr); }
+    .stat { border-left: 0; border-top: 1px solid var(--line); }
+    .features { grid-template-columns: 1fr 1fr; }
+    .steps { grid-template-columns: 1fr 1fr; gap: 32px; }
+    .step::after { display: none; }
+    .links { display: none; }
+    nav .wrap { justify-content: space-between; }
+  }
+  @media (max-width: 560px) {
+    .wrap { padding: 0 16px; }
+    .features, .steps { grid-template-columns: 1fr; }
+    .hero-card { position: static; margin-top: 16px; }
+    section { padding: 60px 0; }
+  }
+</style>
+</head>
+<body>
+<div class="gov-strip"><div class="wrap"><span><b>Tanzania National Roads Agency (TANROADS)</b> · Internal system, authorised users only</span><span class="motto">Good roads for national development</span></div></div>
+
+<nav><div class="wrap">
+  <a class="brand" href="#"><img src="tanroads-logo.jpg" alt="TANROADS logo" class="logo"><span class="brand-text">Bridge Register<small>TANROADS · Road Asset Management</small></span></a>
+  <div class="links"><a href="#condition">Network condition</a><a href="#features">Features</a><a href="#how">How it works</a></div>
+  <div class="user"><span class="who"><small>Signed in as</small><b id="who"></b></span><button class="btn btn-out" id="signout" type="button">Sign out</button></div>
+</div></nav>
+
+<header class="hero"><div class="wrap">
+  <div>
+    <span class="eyebrow">Bridge inventory &amp; condition</span>
+    <h1>Every bridge on the network, accounted for.</h1>
+    <p class="lead">Register, inspect and verify bridges and culverts on trunk and regional roads, directly from a tablet at the site, even without mobile signal.</p>
+    <div class="cta"><a class="btn btn-primary" href="app.html">Open the register →</a><a class="btn btn-ghost" href="#how">How it works</a></div>
+  </div>
+  <div class="hero-art">
+    <svg viewBox="0 0 560 360" aria-hidden="true">
+      <defs><linearGradient id="w" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3f7cc0"/><stop offset="1" stop-color="#13315c"/></linearGradient></defs>
+      <path d="M0 250 C 120 230, 180 280, 280 262 S 460 240, 560 256 V360 H0Z" fill="url(#w)" opacity=".7"/>
+      <path d="M0 205h560v16H0z" fill="#dfe7f1"/>
+      <path d="M0 197h560v8H0z" fill="#1e9e3e"/>
+      <g fill="#c9d6e6"><rect x="70" y="221" width="22" height="100"/><rect x="200" y="221" width="22" height="92"/><rect x="338" y="221" width="22" height="92"/><rect x="468" y="221" width="22" height="100"/></g>
+      <g stroke="#6fdc88" stroke-width="3" fill="none" opacity=".9"><path d="M81 197 C 140 120, 150 120, 211 197"/><path d="M211 197 C 270 120, 290 120, 349 197"/><path d="M349 197 C 410 120, 420 120, 479 197"/></g>
+      <g fill="#fff"><circle cx="81" cy="150" r="5"/><circle cx="479" cy="150" r="5"/></g>
+      <g stroke="#ffffff66" stroke-dasharray="4 5"><path d="M81 150V60M479 150V60"/><path d="M81 70H479"/></g>
+      <text x="280" y="62" fill="#fff" font-size="15" font-family="Source Sans 3, sans-serif" text-anchor="middle" font-weight="700">L = 45.4 m · 3 spans</text>
+      <g transform="translate(410 250)"><circle r="18" fill="#1e9e3e"/><path d="M0-8a6 6 0 0 1 6 6c0 5-6 12-6 12s-6-7-6-12a6 6 0 0 1 6-6z" fill="#0b2545"/><circle cy="-2" r="2" fill="#1e9e3e"/></g>
+    </svg>
+    <div class="hero-card"><span class="dot"></span><div><b>12-0001 Ngerengere</b><br><span style="color:#5a6878">Saved offline · syncs when online</span></div></div>
+  </div>
+</div></header>
+
+<div class="stats"><div class="wrap">
+  <div class="stat"><div class="num" data-stat="bridges">-</div><div class="lbl">Bridges &amp; culverts</div></div>
+  <div class="stat"><div class="num" data-stat="roads">-</div><div class="lbl">Roads covered</div></div>
+  <div class="stat"><div class="num" data-stat="regions">-</div><div class="lbl">Regions</div></div>
+  <div class="stat"><div class="num" data-stat="total_length_m" data-suffix=" m">-</div><div class="lbl">Total bridge length</div></div>
+  <div class="stat"><div class="num" data-stat="verified_pct">-</div><div class="lbl">Records verified</div></div>
+</div></div>
+
+<section class="condition" id="condition"><div class="wrap cond-grid">
+  <div class="section-head" style="margin:0">
+    <h2>Network condition at a glance</h2>
+    <p>Overall condition as recorded by field inspectors. It updates automatically as tablets sync.</p>
+    <p style="font-size:14px;margin-top:14px">Last update: <b data-stat="last_update">-</b> <span id="src"></span></p>
+  </div>
+  <div>
+    <div class="bar"><span data-bar="good" style="background:var(--good);flex-grow:1"></span><span data-bar="fair" style="background:var(--fair);flex-grow:1"></span><span data-bar="poor" style="background:var(--poor);flex-grow:1"></span></div>
+    <div class="legend">
+      <div><i style="background:var(--good)"></i>Good <small data-stat="good">-</small></div>
+      <div><i style="background:var(--fair)"></i>Fair <small data-stat="fair">-</small></div>
+      <div><i style="background:var(--poor)"></i>Poor <small data-stat="poor">-</small></div>
+    </div>
+    <div class="meter"><div class="top"><span>GPS location captured</span><span data-stat="gps_pct">-</span></div><div class="bar" style="height:10px"><span data-bar="gps" style="background:var(--navy);flex-grow:0"></span><span data-bar="nogps" style="flex-grow:1"></span></div></div>
+  </div>
+</div></section>
+
+<section id="features"><div class="wrap">
+  <div class="section-head"><h2>Built for work in the field</h2><p>The same fields as the official <i>List of Bridges</i> template, captured once and checked before they reach the database.</p></div>
+  <div class="features">
+    <div class="feature"><div class="ico"><svg viewBox="0 0 24 24"><path d="M2 8.8a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0"/><path d="M3 3l18 18"/></svg></div><h3>Works offline</h3><p>Record bridges with no signal. Data stays safely on the tablet until a connection returns.</p></div>
+    <div class="feature"><div class="ico"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg></div><h3>GPS at the site</h3><p>One tap captures latitude and longitude from the tablet, with accuracy shown.</p></div>
+    <div class="feature"><div class="ico"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div><h3>Validated entries</h3><p>Dropdown lists, bridge number format and range checks stop errors at the source.</p></div>
+    <div class="feature"><div class="ico"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-15 6.7L3 16M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5M3 21v-5h5"/></svg></div><h3>Safe synchronisation</h3><p>If two people edit the same bridge, nothing is overwritten. The inspector chooses which version to keep.</p></div>
+    <div class="feature"><div class="ico"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div><h3>Verification workflow</h3><p>Administrators check and approve records. Any later edit sends a bridge back for checking.</p></div>
+    <div class="feature"><div class="ico"><svg viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg></div><h3>Full audit history</h3><p>Every change is kept: who changed it, when, and from which device. Export to Excel at any time.</p></div>
+  </div>
+</div></section>
+
+<section id="how" style="background:var(--soft)"><div class="wrap">
+  <div class="section-head"><h2>How it works</h2><p>From the riverbank to the national inventory in four steps.</p></div>
+  <div class="steps">
+    <div class="step"><h3>Capture on site</h3><p>Open a bridge or register a new one, then take GPS and record condition.</p></div>
+    <div class="step"><h3>Sync when online</h3><p>Changes upload automatically as soon as the tablet has a connection.</p></div>
+    <div class="step"><h3>Check &amp; verify</h3><p>Office staff review the records and mark them as verified.</p></div>
+    <div class="step"><h3>Report</h3><p>Export the list in the standard template or query it for planning.</p></div>
+  </div>
+</div></section>
+
+<div class="cta-band"><div class="wrap">
+  <div><h2>Ready to update the register?</h2><p>Open the register to view, check, update or add bridges.</p></div>
+  <a class="btn btn-primary" href="app.html">Open the register →</a>
+</div></div>
+
+<footer><div class="wrap"><span>© <span id="yr"></span> Bridge Register · Road Asset Management</span><span>For access, contact your regional system administrator.</span></div></footer>
+
+<script>
+document.getElementById('yr').textContent = new Date().getFullYear();
+
+// This page is only for signed-in users. The session lives in the same
+// IndexedDB database the register app (app.html) uses, so it works offline.
+function openDb() {
+  return new Promise((resolve, reject) => {
+    const r = indexedDB.open('bridge-register', 1);
+    r.onupgradeneeded = () => { r.result.createObjectStore('bridges', { keyPath: 'id' }); r.result.createObjectStore('meta'); };
+    r.onsuccess = () => resolve(r.result);
+    r.onerror = () => reject(r.error);
+  });
+}
+function tx(db, store, mode, fn) {
+  return new Promise((resolve, reject) => {
+    const t = db.transaction(store, mode);
+    const r = fn(t.objectStore(store));
+    t.oncomplete = () => resolve(r ? r.result : undefined);
+    t.onerror = t.onabort = () => reject(t.error);
+  });
+}
+const toLogin = () => location.replace('app.html');
+
+// Same figures as /api/stats, computed from this device's copy when offline.
+function localStats(bridges) {
+  const live = bridges.filter(b => !b.is_deleted && ['Active', 'New'].includes(b.record_status));
+  const n = f => live.filter(f).length;
+  const dates = live.map(b => b._local_updated || b.updated_at).filter(Boolean).sort();
+  return {
+    bridges: live.length, verified: n(b => b.verified_at), with_gps: n(b => b.latitude != null),
+    regions: new Set(live.map(b => b.region_code)).size, roads: new Set(live.map(b => b.road_no)).size,
+    total_length_m: Math.round(live.reduce((t, b) => t + (Number(b.length_m) || 0), 0)),
+    good: n(b => b.overall_condition === 'Good'), fair: n(b => b.overall_condition === 'Fair'), poor: n(b => b.overall_condition === 'Poor'),
+    last_update: dates[dates.length - 1] || null,
+  };
+}
+
+(async () => {
+  let db, session;
+  try {
+    db = await openDb();
+    session = await tx(db, 'meta', 'readonly', s => s.get('session'));
+  } catch { /* no storage - treat as signed out */ }
+  if (!session) return toLogin();
+  document.documentElement.classList.remove('auth-pending');
+  document.getElementById('who').textContent = session.user.full_name;
+
+  document.getElementById('signout').onclick = async () => {
+    const pending = (await tx(db, 'bridges', 'readonly', s => s.getAll())).filter(b => b._dirty).length;
+    const msg = pending
+      ? `${pending} change(s) have not been synced. They stay on this device, but sign out anyway?`
+      : 'Sign out of the bridge register?';
+    if (!confirm(msg)) return;
+    fetch('api/logout', { method: 'POST', headers: { Authorization: 'Bearer ' + session.token } }).catch(() => {});
+    await tx(db, 'meta', 'readwrite', s => { s.put(null, 'session'); });
+    toLogin();
+  };
+
+  let s = null;
+  try {
+    const ctl = new AbortController();
+    setTimeout(() => ctl.abort(), 4000);
+    const r = await fetch('api/stats', { headers: { Authorization: 'Bearer ' + session.token }, signal: ctl.signal });
+    if (r.status === 401) { // session expired or account disabled
+      await tx(db, 'meta', 'readwrite', st => { st.put(null, 'session'); });
+      return toLogin();
+    }
+    if (r.ok) s = await r.json();
+  } catch { /* offline */ }
+  if (!s) {
+    s = localStats(await tx(db, 'bridges', 'readonly', st => st.getAll()));
+    document.getElementById('src').textContent = '(offline - figures from this device)';
+  }
+
+  const pct = (a, b) => b ? Math.round(100 * a / b) + '%' : '-';
+  const v = { ...s,
+    verified_pct: pct(s.verified, s.bridges), gps_pct: pct(s.with_gps, s.bridges),
+    last_update: s.last_update ? new Date(s.last_update).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '-' };
+  document.querySelectorAll('[data-stat]').forEach(el => {
+    const val = v[el.dataset.stat];
+    el.textContent = typeof val === 'number' ? val.toLocaleString() + (el.dataset.suffix || '') : val;
+  });
+  const set = (k, n) => { const el = document.querySelector(`[data-bar="${k}"]`); if (el) el.style.flexGrow = n; };
+  set('good', s.good); set('fair', s.fair); set('poor', s.poor);
+  set('gps', s.with_gps); set('nogps', s.bridges - s.with_gps);
+})();
+</script>
+</body>
+</html>

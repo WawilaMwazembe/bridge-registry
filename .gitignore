@@ -1,0 +1,19 @@
+# Dependencies (reinstall with: cd server; npm install)
+node_modules/
+
+# Secrets - database password for the API. Never commit.
+server/.env
+
+# Full database backups contain password hashes - keep them off GitHub
+backups/
+*.dump
+
+# Source spreadsheets exported for import
+bridges.csv
+
+# Logs
+logs/
+*.log
+
+# draw.io auto-backups
+*.bkp
