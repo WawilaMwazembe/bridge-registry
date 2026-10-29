@@ -353,6 +353,7 @@ function renderList() {
         ${opt('unverified', 'Not verified', f.only)}${opt('nogps', 'Missing GPS', f.only)}
       </select>
       ${canEdit() ? '<button class="primary" id="btnNew">+ New bridge</button>' : ''}
+      <button id="btnMap" title="Show the bridges on a map">🗺 Map</button>
       <button id="btnExport" title="Download the bridge list in template column order">Export CSV</button>
       ${isAdmin() ? '<button id="btnAdmin">Admin</button>' : ''}
     </div>
@@ -364,6 +365,7 @@ function renderList() {
   $('#fOnly').onchange = e => { f.only = e.target.value; renderRows(); };
   if ($('#btnNew')) $('#btnNew').onclick = () => renderForm(null);
   $('#btnExport').onclick = exportCsv;
+  $('#btnMap').onclick = renderMap;
   renderRows();
 }
 
@@ -467,10 +469,15 @@ function renderForm(existing, prefill = {}) {
     record_status: 'New', region_code: state.session.user.region_code || '', ...prefill,
   };
   const editable = canEdit();
-  let sections = '', open = false;
+  let sections = '', open = false, curSec = '';
+  const mapBlock = typeof L === 'undefined' ? '' : `
+    <div id="formMap" class="map-small" aria-label="Bridge location map"></div>
+    <p class="hint">${editable ? 'Tap the map or drag the pin to set the exact location. ' : ''}<a id="gmaps" target="_blank" rel="noopener" hidden>Open in Google Maps ↗</a></p>`;
+  const closeSec = () => { sections += '</div>' + (curSec === 'Location' ? mapBlock : '') + '</fieldset>'; };
   for (const f of FIELDS) {
     if (f.sec) {
-      if (open) sections += '</div></fieldset>';
+      if (open) closeSec();
+      curSec = f.sec;
       sections += `<fieldset ${editable ? '' : 'disabled'}><legend>${esc(f.sec)}</legend>`;
       if (f.sec === 'Location') {
         sections += `<p class="hint"><button type="button" id="btnGps">📍 Use tablet GPS</button> <span id="gpsInfo">Stand at the bridge centre for best accuracy.</span></p>`;
@@ -480,7 +487,7 @@ function renderForm(existing, prefill = {}) {
     }
     sections += fieldHtml(f, rec);
   }
-  sections += '</div></fieldset>';
+  closeSec();
 
   const meta = existing ? `<p class="muted">
       ${existing.version ? `Server version ${existing.version}` : 'Not yet on the server'}
@@ -518,6 +525,7 @@ function renderForm(existing, prefill = {}) {
     $('#keepMine').onclick = () => resolveConflict(existing, 'mine');
     $('#useServer').onclick = () => resolveConflict(existing, 'server');
   }
+  initFormMap(form, rec, editable);
   window.scrollTo(0, 0);
 }
 
@@ -530,6 +538,7 @@ function captureGps(form) {
       form.latitude.value = p.coords.latitude.toFixed(6);
       form.longitude.value = p.coords.longitude.toFixed(6);
       info.textContent = `Captured, accuracy ±${Math.round(p.coords.accuracy)} m`;
+      form._showOnMap?.(p.coords.accuracy);
     },
     err => { info.textContent = 'Could not get position: ' + err.message; },
     { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 });
@@ -635,6 +644,134 @@ async function verify(b) {
   } catch (e) {
     toast('Verification needs a connection: ' + e.message, true);
   }
+}
+
+// -------------------------------------------------------------------- maps
+// Leaflet (served from /vendor/leaflet) with OpenStreetMap and satellite
+// imagery. The background tiles need a connection; bridge points always show.
+const TZ_VIEW = { center: [-6.4, 35.0], zoom: 6 };
+const COND_COLOR = { Good: '#2e8b57', Fair: '#e0a100', Poor: '#c8412b' };
+const hasGps = b => b.latitude != null && b.longitude != null;
+const fmtCoord = v => Number(v).toFixed(6);
+
+function makeMap(el, { base = 'Map', ...opts } = {}) {
+  const layers = {
+    Map: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }),
+    Satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 19, attribution: 'Imagery &copy; Esri' }),
+  };
+  const map = L.map(el, { layers: [layers[base]], ...opts });
+  L.control.layers(layers).addTo(map);
+  L.control.scale({ imperial: false }).addTo(map);
+  return map;
+}
+
+function bridgeDot(b, radius = 8) {
+  return L.circleMarker([b.latitude, b.longitude], {
+    radius, weight: 2, color: '#fff', fillOpacity: .95,
+    fillColor: COND_COLOR[b.overall_condition] || '#5a6878',
+  }).bindTooltip(`${esc(b.bridge_no)} ${esc(b.bridge_name)}`);
+}
+
+function popupHtml(b) {
+  const row = (k, v) => (v == null || v === '' ? '' : `<tr><th>${k}</th><td>${esc(v)}</td></tr>`);
+  const dest = `${fmtCoord(b.latitude)},${fmtCoord(b.longitude)}`;
+  return `<div class="map-pop">
+    <b>${esc(b.bridge_no)} ${esc(b.bridge_name)}</b>
+    <table>
+      ${row('Road', `${b.road_no || ''} ${roadName(b.road_no)}`.trim())}
+      ${row('Link', b.link_name)}
+      ${row('Chainage', b.chainage_km != null ? `${Number(b.chainage_km).toFixed(3)} km` : null)}
+      ${row('Type', [b.structure_type, b.material].filter(Boolean).join(' · '))}
+      ${row('Length', b.length_m != null ? `${b.length_m} m` : null)}
+      ${row('Condition', b.overall_condition)}
+      ${row('GPS', dest)}
+    </table>
+    <div class="map-pop-actions">
+      <button type="button" class="primary" data-open="${esc(b.id)}">Open record</button>
+      <a href="https://www.google.com/maps/dir/?api=1&destination=${dest}" target="_blank" rel="noopener">Directions ↗</a>
+    </div>
+  </div>`;
+}
+
+function renderMap() {
+  currentView = 'map';
+  renderStatus();
+  if (typeof L === 'undefined') { toast('The map could not be loaded - reload the page while online', true); return renderList(); }
+  const list = filteredBridges();
+  const located = list.filter(hasGps);
+  const missing = list.length - located.length;
+  const key = (c, label) => `<span><i style="background:${c}"></i>${label}</span>`;
+  $('#main').innerHTML = `
+    <div class="toolbar"><button id="btnBack">← Back to list</button><h2 style="margin:0 8px">Bridge map</h2>
+      <span class="muted">${located.length} of ${list.length} bridge(s) located${missing ? ` · ${missing} without GPS (see the "Missing GPS" filter)` : ''}</span></div>
+    <div id="bridgeMap" class="map-big"></div>
+    <div class="map-legend">${key(COND_COLOR.Good, 'Good')}${key(COND_COLOR.Fair, 'Fair')}${key(COND_COLOR.Poor, 'Poor')}${key('#5a6878', 'Not rated')}
+      <span class="muted">Uses the list's current search and filters. Switch to Satellite with the layer button (top right).</span></div>`;
+  $('#btnBack').onclick = () => renderList();
+
+  const map = makeMap('bridgeMap');
+  const points = located.map(b => { bridgeDot(b).bindPopup(popupHtml(b), { minWidth: 240 }).addTo(map); return [b.latitude, b.longitude]; });
+  if (points.length) map.fitBounds(points, { padding: [40, 40], maxZoom: 15 });
+  else map.setView(TZ_VIEW.center, TZ_VIEW.zoom);
+  map.on('popupopen', e => {
+    const btn = e.popup.getElement().querySelector('[data-open]');
+    if (btn) btn.onclick = () => renderForm(state.bridges.find(b => b.id === btn.dataset.open));
+  });
+}
+
+// Mini map in the bridge form: shows the exact spot (satellite by default) and
+// lets inspectors set it by tapping or dragging. Kept in step with the
+// latitude/longitude fields and the "Use tablet GPS" button.
+function initFormMap(form, rec, editable) {
+  if (typeof L === 'undefined' || !$('#formMap')) return;
+  const map = makeMap('formMap', { base: 'Satellite', scrollWheelZoom: false });
+  const gmaps = $('#gmaps');
+  let pin = null, accuracy = null;
+
+  const neighbours = state.bridges.filter(b => hasGps(b) && b.id !== rec.id && !b.is_deleted);
+  neighbours.forEach(b => bridgeDot(b, 6).addTo(map));
+
+  function place(lat, lng, zoomIn) {
+    if (!pin) {
+      pin = L.marker([lat, lng], { draggable: editable, autoPan: true }).addTo(map);
+      pin.on('dragend', () => { const p = pin.getLatLng(); setFields(p.lat, p.lng); });
+    } else {
+      pin.setLatLng([lat, lng]);
+    }
+    if (zoomIn) map.setView([lat, lng], Math.max(map.getZoom(), 17));
+    gmaps.href = `https://www.google.com/maps/search/?api=1&query=${fmtCoord(lat)},${fmtCoord(lng)}`;
+    gmaps.hidden = false;
+  }
+  function setFields(lat, lng) {
+    form.latitude.value = fmtCoord(lat);
+    form.longitude.value = fmtCoord(lng);
+    if (accuracy) { accuracy.remove(); accuracy = null; }
+    place(lat, lng, false);
+  }
+  function fromFields(zoomIn) {
+    const lat = parseFloat(form.latitude.value), lng = parseFloat(form.longitude.value);
+    if (Number.isFinite(lat) && Number.isFinite(lng)) place(lat, lng, zoomIn);
+  }
+
+  if (hasGps(rec)) {
+    map.setView([rec.latitude, rec.longitude], 17);
+    place(rec.latitude, rec.longitude, false);
+  } else if (neighbours.length) {
+    map.fitBounds(neighbours.map(b => [b.latitude, b.longitude]), { padding: [30, 30], maxZoom: 13 });
+  } else {
+    map.setView(TZ_VIEW.center, TZ_VIEW.zoom);
+  }
+  if (editable) map.on('click', e => setFields(e.latlng.lat, e.latlng.lng));
+  form.latitude.addEventListener('change', () => fromFields(true));
+  form.longitude.addEventListener('change', () => fromFields(true));
+  // Called after a GPS fix: centre on it and draw the accuracy circle.
+  form._showOnMap = acc => {
+    fromFields(true);
+    if (accuracy) accuracy.remove();
+    if (pin && acc) accuracy = L.circle(pin.getLatLng(), { radius: acc, color: '#1a4fb0', weight: 1, fillOpacity: .12 }).addTo(map);
+  };
 }
 
 // ------------------------------------------------------------------- admin

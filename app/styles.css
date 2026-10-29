@@ -131,3 +131,21 @@ legend { font-weight: 800; padding: 0 6px; color: var(--navy); }
   .brand-text small { display: none; }
   .logo-badge img { height: 34px; }
 }
+
+/* ---------- maps ---------- */
+.map-big { height: calc(100vh - 230px); min-height: 420px; border: 1px solid var(--line); border-radius: 10px; z-index: 0; }
+.map-small { height: 340px; margin-top: 14px; border: 1px solid var(--line); border-radius: 8px; z-index: 0; }
+.map-legend { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin-top: 10px; font-weight: 600; }
+.map-legend i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; border: 2px solid #fff; box-shadow: 0 0 0 1px #0003; }
+.map-legend .muted { font-weight: 400; }
+#gmaps { color: var(--navy-2); font-weight: 600; }
+.leaflet-container { font: inherit; }
+.map-pop { color: #1c2733; font-size: 14px; }
+.map-pop > b { color: #0b2a5c; font-size: 15px; }
+.map-pop table { margin: 6px 0 10px; border-collapse: collapse; }
+.map-pop th, .map-pop td { padding: 2px 8px 2px 0; border: 0; white-space: normal; text-align: left; font-size: 13px; background: none; position: static; }
+.map-pop th { color: #5a6878; text-transform: none; letter-spacing: 0; font-weight: 600; }
+.map-pop-actions { display: flex; gap: 12px; align-items: center; }
+.map-pop-actions button { min-height: 36px; padding: 6px 14px; }
+.map-pop-actions a { color: #1a4fb0; font-weight: 600; }
+@media (max-width: 600px) { .map-big { height: calc(100vh - 260px); } .map-small { height: 260px; } }

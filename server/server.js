@@ -36,6 +36,8 @@ const sha256 = s => crypto.createHash('sha256').update(s).digest('hex');
 const app = express();
 app.use(express.json({ limit: '5mb' }));
 app.use(express.static(path.join(__dirname, '..', 'app')));
+// Map library, served locally so the app's maps load without the internet
+app.use('/vendor/leaflet', express.static(path.join(__dirname, 'node_modules', 'leaflet', 'dist')));
 
 // ---------------------------------------------------------------- auth
 async function auth(req, res, next) {

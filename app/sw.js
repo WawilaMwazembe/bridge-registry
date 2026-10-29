@@ -1,7 +1,9 @@
 // Service worker: keeps the app itself available offline.
 // Data is never cached here - it lives in IndexedDB and moves via /api/sync.
-const CACHE = 'bridge-register-v5'; // bump on every app release
-const SHELL = ['./', 'index.html', 'app.html', 'styles.css', 'app.js', 'manifest.webmanifest', 'icon.svg', 'tanroads-logo.jpg'];
+const CACHE = 'bridge-register-v6'; // bump on every app release
+const SHELL = ['./', 'index.html', 'app.html', 'styles.css', 'app.js', 'manifest.webmanifest', 'icon.svg', 'tanroads-logo.jpg',
+  'vendor/leaflet/leaflet.css', 'vendor/leaflet/leaflet.js', 'vendor/leaflet/images/marker-icon.png',
+  'vendor/leaflet/images/marker-icon-2x.png', 'vendor/leaflet/images/marker-shadow.png', 'vendor/leaflet/images/layers.png'];
 const NETWORK_WAIT_MS = 3000; // on a weak signal, fall back to the stored copy after this
 
 self.addEventListener('install', e => {
